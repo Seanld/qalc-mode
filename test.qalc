@@ -1,0 +1,5 @@
+# Testing addition.
+5 + 3
+
+# Testing slightly more complex operations.
+pi * 5^2

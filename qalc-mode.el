@@ -40,12 +40,29 @@ And `reverse' can be:
                                     entry-line))))
       (forward-line move-direction))))
 
+(defun qalc--center-entry ()
+  (let ((result nil))
+    (while (not (= 0 (cond ((equal (qalc--get-line-string)
+                                   "")
+                            (progn (setq result 1) 1))
+                           ((equal (substring (qalc--get-line-string)
+                                              0 1)
+                                   "#")
+                            (progn (setq result 1) 1))
+                           ((equal (substring (qalc--get-line-string)
+                                              0 3)
+                                   "==>")
+                            (progn (setq result -1) -1))
+                           (t
+                            (progn (setq result 0) 0)))))
+      (forward-line result))))
+
 (defun qalc-eval-entry ()
   "Evaluate an entry in the file, and add the result to the end of it."
   (interactive)
   (save-excursion
     ;; Go to next entry line, or stay on it if cursor is currently on one.
-    (qalc--go-to-line-type 3 nil)
+    (qalc--center-entry)
     (let ((result (qalc--eval-expression (qalc--get-line-string))))
       ;; Determine whether to replace an existing result line, or insert a new one.
       (if (equal (substring (save-excursion

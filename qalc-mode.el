@@ -1,9 +1,50 @@
 (defvar qalc-mode-hook nil)
 
+(defun qalc--eval-expression (entry-string)
+  "Returns string result from evaluating a Qalc expression."
+  (shell-command-to-string (format "qalc -t %s" entry-string)))
+
+(defun qalc--go-to-line-type (line-type reverse)
+  "Goes to the next (or stays on it if currently on one) line of type
+`line-type' which is any of:
+* 0 for an empty line
+* 1 for a comment/description line
+* 2 for a result line
+* 3 for an entry line
+And `reverse' can be:
+* nil to search forward, or
+* t to search backward"
+  (let ((empty-line 0)
+        (commented-line 1)
+        (result-line 2)
+        (entry-line 3)
+        (move-direction (if (eq reverse nil)
+                            1
+                          -1))
+        (current-line '(buffer-substring-no-properties (line-beginning-position)
+                                                      (line-end-position))))
+    (while (not (= line-type (cond ((equal (buffer-substring-no-properties (line-beginning-position)
+                                                                           (line-end-position))
+                                           "")
+                                    empty-line)
+                                   ((equal (substring (buffer-substring-no-properties (line-beginning-position)
+                                                                                      (line-end-position))
+                                                      0 1)
+                                           "#")
+                                    commented-line)
+                                   ((equal (substring (buffer-substring-no-properties (line-beginning-position)
+                                                                                      (line-end-position))
+                                                      0 3)
+                                           "==>")
+                                    result-line)
+                                   (t
+                                    entry-line))))
+      (forward-line move-direction))))
+
 (defun qalc-eval-entry ()
-  "Evaluate an entries in the file, and add the result to the end."
+  "Evaluate an entry in the file, and add the result to the end of it."
   (interactive)
-  (message "Evaluated"))
+  )
 
 (defvar qalc-mode-map
   (let ((map (make-sparse-keymap)))
@@ -20,7 +61,8 @@
     st))
 
 (defvar qalc-highlights
-  '(((rx (one-or-more punct)) . font-lock-constant-face)))
+  `((,(rx line-start "==>" (0+ anything)) . font-lock-warning-face)
+    (,(rx (1+ punct)) . font-lock-constant-face)))
 
 (define-derived-mode qalc-mode text-mode ()
   "Major mode for interactively evaluating qalculate entries."

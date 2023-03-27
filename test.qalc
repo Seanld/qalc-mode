@@ -1,5 +1,19 @@
-# Testing addition.
-5 + 3
+# Simple arithmetic.
+5 - 3 + 3
+==> 5
 
 # Testing slightly more complex operations.
 pi * 5^2
+==> 78.53981634
+
+# Now we test functions.
+sqrt(9) + floor(6.3)
+==> 9
+
+# Now to test units.
+5 V * 2.4 A
+==> 12 W
+
+# And now explicit unit conversions.
+3 A -> C
+==> 3 C/s

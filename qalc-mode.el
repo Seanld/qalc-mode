@@ -57,6 +57,15 @@ And `reverse' can be:
                             (progn (setq result 0) 0)))))
       (forward-line result))))
 
+(defun qalc--entry-has-result ()
+  "Returns `t' if the entry under point has a result line already."
+  (let ((next-line-string (save-excursion
+                            (forward-line)
+                            (qalc--get-line-string))))
+    (cond ((equal next-line-string "") nil)
+          ((equal (substring next-line-string 0 3) "==>") t)
+          (t nil))))
+
 (defun qalc-eval-entry ()
   "Evaluate an entry in the file, and add the result to the end of it."
   (interactive)
@@ -65,15 +74,11 @@ And `reverse' can be:
     (qalc--center-entry)
     (let ((result (qalc--eval-expression (qalc--get-line-string))))
       ;; Determine whether to replace an existing result line, or insert a new one.
-      (if (equal (substring (save-excursion
-                              (forward-line)
-                              (qalc--get-line-string))
-                            0 3)
-                 "==>")
+      (if (qalc--entry-has-result)
           (progn (forward-line)
                  (kill-whole-line))
         (progn (end-of-line)
-               (open-line 1)
+               (open-line 0)
                (forward-line)))
       (insert (format "==> %s" result)))))
 

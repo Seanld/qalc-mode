@@ -75,7 +75,7 @@ And `reverse' can be:
     st))
 
 (defvar qalc-highlights
-  `((,(rx line-start "==>" (0+ anything)) . font-lock-warning-face)
+  `((,(rx line-start "==>" (0+ not-newline)) . font-lock-warning-face)
     (,(rx (1+ punct)) . font-lock-constant-face)))
 
 (define-derived-mode qalc-mode text-mode ()

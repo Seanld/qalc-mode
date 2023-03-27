@@ -113,6 +113,11 @@ And `reverse' can be:
     (insert-file-contents "/usr/share/qalculate/units.xml")
     (libxml-parse-xml-region (point-min) (point-max))))
 
-;; (message (dom-by-tag qalc-units-xml 'names))
+;; TODO Get the list filtered down to only the useful unit symbols.
+;; (message "%s" (dom-search (dom-by-tag qalc-units-xml 'names)
+;;                           (lambda (node)
+;;                             (message "%s" (nth 1 node))
+;;                             (eq (nth 1 node)
+;;                                 nil))))
 
 ;; (provide 'qalc-mode)

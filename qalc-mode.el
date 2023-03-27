@@ -1,8 +1,12 @@
 (defvar qalc-mode-hook nil)
 
+(defun qalc--get-line-string ()
+  (buffer-substring-no-properties (line-beginning-position)
+                                  (line-end-position)))
+
 (defun qalc--eval-expression (entry-string)
   "Returns string result from evaluating a Qalc expression."
-  (shell-command-to-string (format "qalc -t %s" entry-string)))
+  (shell-command-to-string (format "qalc -t \"%s\"" entry-string)))
 
 (defun qalc--go-to-line-type (line-type reverse)
   "Goes to the next (or stays on it if currently on one) line of type
@@ -20,20 +24,15 @@ And `reverse' can be:
         (entry-line 3)
         (move-direction (if (eq reverse nil)
                             1
-                          -1))
-        (current-line '(buffer-substring-no-properties (line-beginning-position)
-                                                      (line-end-position))))
-    (while (not (= line-type (cond ((equal (buffer-substring-no-properties (line-beginning-position)
-                                                                           (line-end-position))
+                          -1)))
+    (while (not (= line-type (cond ((equal (qalc--get-line-string)
                                            "")
                                     empty-line)
-                                   ((equal (substring (buffer-substring-no-properties (line-beginning-position)
-                                                                                      (line-end-position))
+                                   ((equal (substring (qalc--get-line-string)
                                                       0 1)
                                            "#")
                                     commented-line)
-                                   ((equal (substring (buffer-substring-no-properties (line-beginning-position)
-                                                                                      (line-end-position))
+                                   ((equal (substring (qalc--get-line-string)
                                                       0 3)
                                            "==>")
                                     result-line)
@@ -44,7 +43,22 @@ And `reverse' can be:
 (defun qalc-eval-entry ()
   "Evaluate an entry in the file, and add the result to the end of it."
   (interactive)
-  )
+  (save-excursion
+    ;; Go to next entry line, or stay on it if cursor is currently on one.
+    (qalc--go-to-line-type 3 nil)
+    (let ((result (qalc--eval-expression (qalc--get-line-string))))
+      ;; Determine whether to replace an existing result line, or insert a new one.
+      (if (equal (substring (save-excursion
+                              (forward-line)
+                              (qalc--get-line-string))
+                            0 3)
+                 "==>")
+          (progn (forward-line)
+                 (kill-whole-line))
+        (progn (end-of-line)
+               (open-line 1)
+               (forward-line)))
+      (insert (format "==> %s" result)))))
 
 (defvar qalc-mode-map
   (let ((map (make-sparse-keymap)))
@@ -73,9 +87,9 @@ And `reverse' can be:
 
 ;; Parse libqalculate unit XML file.
 (defvar qalc-units-xml
-      (with-temp-buffer
-        (insert-file-contents "/usr/share/qalculate/units.xml")
-        (libxml-parse-xml-region (point-min) (point-max))))
+  (with-temp-buffer
+    (insert-file-contents "/usr/share/qalculate/units.xml")
+    (libxml-parse-xml-region (point-min) (point-max))))
 
 ;; (message (dom-by-tag qalc-units-xml 'names))
 

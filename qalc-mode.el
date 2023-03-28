@@ -82,6 +82,50 @@ And `reverse' can be:
                (forward-line)))
       (insert (format "==> %s" result)))))
 
+;; Parse libqalculate unit XML file.
+(defvar qalc-units-xml
+  (with-temp-buffer
+    (insert-file-contents "/usr/share/qalculate/units.xml")
+    (libxml-parse-xml-region (point-min) (point-max))))
+
+;; Get all <names> tags that don't have attributes.
+(setq qalc--names-tag-objects (dom-search qalc-units-xml
+                                          (lambda (node)
+                                            (and (not (eq (eq (nth 1 node)
+                                                              nil)
+                                                          nil))
+                                                 (eq (car node)
+                                                     'names)))))
+
+;; Get the values of all the previously-aggregated <names> tags.
+(setq qalc--all-unit-strings (cl-map 'list
+                                     (lambda (node)
+                                       (nth 2 node))
+                                     qalc--names-tag-objects))
+
+;; Since the value strings contain key-value pairs (e.g. "r:unit"), we need to
+;; split the "keys" off of the units themselves.
+(setq qalc--all-units (flatten-tree (cl-map 'list
+                                            (lambda (unit-string)
+                                              (cl-map 'list
+                                                      (lambda (keyval-string)
+                                                        (let* ((splitted (split-string keyval-string ":"))
+                                                               (split-car (car splitted))
+                                                               (split-cdr (cdr splitted)))
+                                                          (if (eq split-cdr nil)
+                                                              split-car
+                                                            split-cdr)))
+                                                      (split-string unit-string ",")))
+                                            qalc--all-unit-strings)))
+
+(setq qalc--units-regex (concat "\\(?:"
+                                (string-join qalc--all-units "\\|")
+                                "\\)"))
+
+(setq qalc--regex-test (let ((units-regex (append '(or)
+                                                  qalc--all-units)))
+                         (rx (eval units-regex))))
+
 (defvar qalc-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") 'qalc-eval-entry)
@@ -97,8 +141,9 @@ And `reverse' can be:
     st))
 
 (defvar qalc-highlights
-  `((,(rx line-start "==>" (0+ not-newline)) . font-lock-warning-face)
-    (,(rx (1+ punct)) . font-lock-constant-face)))
+  `((,(rx line-start "==>" (0+ not-newline)) . font-lock-string-face)
+    (,(rx (1+ punct)) . font-lock-constant-face)
+    (,qalc--units-regex . font-lock-keyword-face)))
 
 (define-derived-mode qalc-mode text-mode ()
   "Major mode for interactively evaluating qalculate entries."
@@ -106,18 +151,5 @@ And `reverse' can be:
   (setq mode-name "Qalc")
   (setq font-lock-defaults '(qalc-highlights))
   (run-hooks 'qalc-mode-hook))
-
-;; Parse libqalculate unit XML file.
-(defvar qalc-units-xml
-  (with-temp-buffer
-    (insert-file-contents "/usr/share/qalculate/units.xml")
-    (libxml-parse-xml-region (point-min) (point-max))))
-
-;; TODO Get the list filtered down to only the useful unit symbols.
-;; (message "%s" (dom-search (dom-by-tag qalc-units-xml 'names)
-;;                           (lambda (node)
-;;                             (message "%s" (nth 1 node))
-;;                             (eq (nth 1 node)
-;;                                 nil))))
 
 ;; (provide 'qalc-mode)

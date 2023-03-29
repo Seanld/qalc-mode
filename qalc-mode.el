@@ -120,13 +120,11 @@ And `reverse' can be:
                                                       (split-string unit-string ",")))
                                             qalc--all-unit-strings)))
 
-(setq qalc--units-regex (concat "\\(?:"
-                                (string-join qalc--all-units "\\|")
-                                "\\)"))
-
-(setq qalc--regex-test (let ((units-regex (append '(or)
-                                                  qalc--all-units)))
-                         (rx (eval units-regex))))
+(setq qalc--units-regex (let ((units-regex '((not alpha)
+                                             (append '(or)
+                                                   qalc--all-units)
+                                             (not alpha)))
+                          (macroexpand `(rx ,units-regex))))
 
 (defvar qalc-mode-map
   (let ((map (make-sparse-keymap)))

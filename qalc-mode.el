@@ -1,3 +1,5 @@
+(require 'dom)
+
 (defvar qalc-mode-hook nil)
 
 (defun qalc--get-line-string ()

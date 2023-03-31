@@ -18,6 +18,7 @@ Example file source included. Image given to demonstrate syntax highlighting.
   - Units
   - Functions
 - [x] Inline expression evaluation
+- [ ] Company completion support
 - [ ] Full-buffer evaluation
 - [ ] Multiline entries
 - [ ] User variables and functions (and their persistence)

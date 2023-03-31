@@ -91,7 +91,7 @@ And `reverse' can be:
     (libxml-parse-xml-region (point-min) (point-max))))
 
 ;; Get all <names> tags that don't have attributes.
-(setq qalc--names-tag-objects (dom-search qalc-units-xml
+(defvar qalc--names-tag-objects (dom-search qalc-units-xml
                                           (lambda (node)
                                             (and (not (eq (eq (nth 1 node)
                                                               nil)
@@ -100,14 +100,14 @@ And `reverse' can be:
                                                      'names)))))
 
 ;; Get the values of all the previously-aggregated <names> tags.
-(setq qalc--all-unit-strings (cl-map 'list
+(defvar qalc--all-unit-strings (cl-map 'list
                                      (lambda (node)
                                        (nth 2 node))
                                      qalc--names-tag-objects))
 
 ;; Since the value strings contain key-value pairs (e.g. "r:unit"), we need to
 ;; split the "keys" off of the units themselves.
-(setq qalc--all-units (flatten-tree (cl-map 'list
+(defvar qalc--all-units (flatten-tree (cl-map 'list
                                             (lambda (unit-string)
                                               (cl-map 'list
                                                       (lambda (keyval-string)
@@ -120,9 +120,34 @@ And `reverse' can be:
                                                       (split-string unit-string ",")))
                                             qalc--all-unit-strings)))
 
-(setq qalc--units-regex (let ((units-regex (append '(or)
+(defvar qalc--units-regex (let ((units-regex (append '(or)
                                                    qalc--all-units)))
                           (macroexpand `(rx bow ,units-regex eow))))
+
+;; Parse libqalculate function XML file.
+(defvar qalc-functions-xml
+  (with-temp-buffer
+    (insert-file-contents "/usr/share/qalculate/functions.xml")
+    (libxml-parse-xml-region (point-min) (point-max))))
+
+;; Get all <builtin_function> tags that don't have attributes.
+(defvar qalc--builtin-functions-tag-objects (dom-search qalc-functions-xml
+                                                      (lambda (node)
+                                                        (if (eq (nth 0 node)
+                                                                'builtin_function)
+                                                            t
+                                                          nil))))
+
+;; Get all function names.
+(defvar qalc--all-builtin-functions (cl-map 'list
+                                          (lambda (node)
+                                            (alist-get 'name
+                                                       (nth 1 node)))
+                                          qalc--builtin-functions-tag-objects))
+
+(defvar qalc--builtin-functions-regex (let ((functions-regex (append '(or)
+                                                                   qalc--all-builtin-functions)))
+                                      (macroexpand `(rx bow ,functions-regex eow))))
 
 (defvar qalc-mode-map
   (let ((map (make-sparse-keymap)))
@@ -141,6 +166,7 @@ And `reverse' can be:
 (defvar qalc-highlights
   `((,(rx line-start "==>" (0+ not-newline)) . font-lock-string-face)
     (,(rx (1+ punct)) . font-lock-constant-face)
+    (,qalc--builtin-functions-regex . font-lock-builtin-face)
     (,qalc--units-regex . font-lock-keyword-face)))
 
 (define-derived-mode qalc-mode text-mode ()

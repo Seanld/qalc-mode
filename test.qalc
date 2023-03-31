@@ -3,6 +3,7 @@
 ==> 5
 
 # Testing slightly more complex operations.
+# A second comment line.
 pi * 5^2
 ==> 78.53981634
 

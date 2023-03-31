@@ -122,7 +122,7 @@ And `reverse' can be:
 
 (setq qalc--units-regex (let ((units-regex (append '(or)
                                                    qalc--all-units)))
-                          (macroexpand `(rx ,units-regex))))
+                          (macroexpand `(rx bow ,units-regex eow))))
 
 (defvar qalc-mode-map
   (let ((map (make-sparse-keymap)))

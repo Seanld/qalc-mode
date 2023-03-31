@@ -8,7 +8,7 @@ Write notated expression entries, evaluate them, and get the results right back 
 
 Example file source included. Image given to demonstrate syntax highlighting.
 
-<img src="./qalc-mode.png" />
+<img src="https://git.sr.ht/~seanld/qalc-mode/blob/master/qalc-mode.png" />
 
 ## Features
 

@@ -8,7 +8,7 @@ Write notated expression entries, evaluate them, and get the results right back 
 
 Example file source included. Image given to demonstrate syntax highlighting.
 
-[Example](./qalc-mode.png "Example")
+<img src="./qalc-mode.png" />
 
 ## Features
 
